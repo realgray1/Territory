@@ -204,3 +204,6 @@ class SimpleAI(Game):
         self.game.game_over = True
         self.game.winner = winner
         print(f"{self.player_name} has no valid moves left and loses the game.")
+
+
+        

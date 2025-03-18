@@ -1,11 +1,12 @@
 import csv
-from datetime import datetime
-from ai_game.ai_pieces import PieceType
 
 class DataCollector:
     def __init__(self, file_name='game_data.csv'):
         self.file_name = file_name
-        self.fieldnames = ['game_state', 'action', 'outcome']
+        self.fieldnames = [
+            'game_state', 'action', 'outcome', 'board_evaluation', 'reward', 'winner', 
+            'loser', 'episode', 'turn', 'q_value', 'q_value_change', 'exploration', 'current_turn'
+        ]
         self.ensure_csv_file()
 
     def ensure_csv_file(self):
@@ -16,20 +17,30 @@ class DataCollector:
         except FileExistsError:
             pass
 
-    def log_data(self, game_state, action, outcome):
+    def log_data(self, game_state, action, outcome, board_evaluation, reward, winner=None, loser=None, episode=None, turn=None, q_value=None, q_value_change=None, exploration=None, current_turn=None):
         data = {
             'game_state': game_state,
             'action': action,
-            'outcome': outcome
+            'outcome': outcome,
+            'board_evaluation': board_evaluation,
+            'reward': reward,
+            'winner': winner,
+            'loser': loser,
+            'episode': episode,
+            'turn': turn,
+            'q_value': q_value,
+            'q_value_change': q_value_change,
+            'exploration': exploration,
+            'current_turn': current_turn
         }
         with open(self.file_name, mode='a', newline='') as file:
             writer = csv.DictWriter(file, fieldnames=self.fieldnames)
             writer.writerow(data)
 
-    def log_game_end(self):
+    def log_game_end(self, episode):
         with open(self.file_name, mode='a', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['---', 'End of Game', '---'])  # Special row to mark the end of a game
+            writer.writerow(['---', 'End of Game', '---', '', '', '', '', '', episode, '', '', '', ''])  # Special row to mark the end of a game
 
     def serialize_game_state(self, game):
         pieces = []
@@ -56,17 +67,3 @@ class DataCollector:
 
     def serialize_outcome(self, outcome):
         return outcome
-
-# Example usage
-if __name__ == "__main__":
-    from ai_game.ai_logic import Game
-    game = Game()
-    data_collector = DataCollector()
-
-    # Example game state and action
-    game_state = data_collector.serialize_game_state(game)
-    action = data_collector.serialize_action('place_pawn', {'row': 0, 'col': 1})
-    outcome = 'win'
-
-    data_collector.log_data(game_state, action, outcome)
-    data_collector.log_game_end()

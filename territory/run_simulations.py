@@ -1,12 +1,12 @@
 from ai_game.ai_logic import Game
-from ai_game.simple_ai import SimpleAI
+from ai_game.q_learning_ai import QLearningAI  # Import the Q-learning AI
 from ai_game.data_collection import DataCollector
 
 def run_single_game():
     data_collector = DataCollector()
     game = Game()
-    ai_player1 = SimpleAI(game, player_name="Player 1")
-    ai_player2 = SimpleAI(game, player_name="Player 2")
+    ai_player1 = QLearningAI(game, player_name="Player 1")
+    ai_player2 = QLearningAI(game, player_name="Player 2")
     
     game_over = False
 

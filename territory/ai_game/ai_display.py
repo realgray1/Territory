@@ -36,7 +36,7 @@ piece_images = {
 }
 
 game = Game()
-ai = SimpleAI(game)
+ai = SimpleAI(game, player_name="AI Player")
 
 def draw_board():
     for row in range(BOARD_SIZE):

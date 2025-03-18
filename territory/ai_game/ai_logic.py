@@ -7,7 +7,7 @@ class Game:
         self.turn = "white_king"
         self.initial_phase = True
         self.actions = {"white": 1, "black": 1}
-        self.action_points = {"white": 0, "black": 1}
+        self.action_points = {"white": 0, "black": 0}  # Start with 0 action points for both players
         self.pawn_placement_mode = False
         self.upgrade_mode = False
         self.selected_pawn = None
@@ -49,7 +49,7 @@ class Game:
                     print(f"{color.capitalize()} {piece_type} placed at ({row}, {col})")
                     self.advance_turn()
         else:
-            print(f"{piece_type.capitalize()} cannot be placed in the center")
+            print(f"{piece_type.name.capitalize()} cannot be placed in the center")
 
     def advance_turn(self):
         if self.turn == "white_king":
@@ -61,6 +61,8 @@ class Game:
         elif self.turn == "black_farm":
             self.initial_phase = False
             self.turn = "white"
+            self.action_points["white"] = 0  # White player starts with 0 action points after initial phase
+            self.action_points["black"] = 1  # Black player starts with 1 action point after initial phase
         elif self.turn == "white":
             self.turn = "black"
         elif self.turn == "black":
@@ -112,14 +114,15 @@ class Game:
             return
         row, col = self.selected_pawn
         current_color = "white" if self.turn.lower() == "white" else "black"
-        piece_type = getattr(PieceType, new_type.upper(), None)
-        if piece_type:
-            self.board.board[row][col] = Piece(current_color, piece_type)
+        if isinstance(new_type, PieceType):
+            self.board.board[row][col] = Piece(current_color, new_type)
             self.actions[current_color] -= 1
             self.upgrade_mode = False
             self.selected_pawn = None
             self.upgrade_type = None
-            print(f"{current_color.capitalize()} Pawn at ({row}, {col}) upgraded to {new_type}.")
+            print(f"{current_color.capitalize()} Pawn at ({row, col}) upgraded to {new_type}.")
+        else:
+            print(f"Invalid piece type: {new_type}")
 
     def cancel_upgrade(self):
         """Cancels the pawn upgrade mode"""
@@ -141,34 +144,67 @@ class Game:
         current_color = "white" if self.turn.lower() == "white" else "black"
         piece = self.board.get_piece_at(row, col)
         if piece and piece.piece_type == PieceType.TURRET and piece.color == current_color:
-            valid_targets = self.find_valid_targets_for_turret(row, col) #Fixes softlock :)
+            valid_targets = self.find_valid_targets_for_turret(row, col)
             if valid_targets:
                 self.selected_turret = (row, col)
                 self.valid_targets = valid_targets
-                print(f"{current_color.capitalize()} Turret at ({row}, {col}) selected, Choose a diagonal target.")
+                print(f"{current_color.capitalize()} Turret at ({row, col}) selected, Choose a diagonal target.")
             else:
-                print(f"No valid targets for turret at ({row}, {col}).")
+                print(f"No valid targets for turret at ({row, col}).")
 
     def find_valid_targets_for_turret(self, turret_row, turret_col):
-        valid_targets = []   #We start with an empty list
+        valid_targets = []
         current_color = "white" if self.turn.lower().startswith("white") else "black"
-        directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]  #4 diagonal directions
+        directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]  # 4 diagonal directions
 
-        for rowstep, colstep in directions:
-            row, col = turret_row + rowstep, turret_col + colstep
+        for row_step, col_step in directions:
+            row, col = turret_row + row_step, turret_col + col_step
             while 0 <= row < 8 and 0 <= col < 8:
                 piece = self.board.get_piece_at(row, col)
                 if piece:
                     if piece.color != current_color:
                         valid_targets.append((row, col))
                     break
-                row += rowstep
-                col += colstep
+                row += row_step
+                col += col_step
 
         return valid_targets
 
     def validate_turret_target(self, target_row, target_col):
         return (target_row, target_col) in self.valid_targets
+
+    def fire_turret(self, turret_row, turret_col, target_row, target_col):
+        """Fire the turret"""
+        if self.validate_turret_target(target_row, target_col):
+            target_piece = self.board.get_piece_at(target_row, target_col)
+            if target_piece:
+                if not hasattr(self.board, 'history'):
+                    self.board.history = []
+                self.board.history.append((target_piece, (target_row, target_col)))  # Save the removed piece and its location for undo
+                
+                if target_piece.piece_type == PieceType.SHIELD:  # Converts shields into pawns
+                    self.board.board[target_row][target_col] = Piece(target_piece.color, PieceType.PAWN)
+                    print(f"Turret at ({turret_row, turret_col}) hit a shield at ({target_row, target_col}).")
+                elif target_piece.piece_type == PieceType.KING:  # If it hits the king, game over
+                    self.board.board[target_row][target_col] = None
+                    self.game_over = True
+                    self.winner = "Player 2" if target_piece.color == self.player1_color else "Player 1"
+                    self.scores[self.winner] += 1 
+                    print(f"Game over! {self.winner} wins!")
+                else: 
+                    self.board.board[target_row][target_col] = None  # Removes the piece
+                    '''print(f"Turret at ({turret_row, turret_col}) fired and removed {target_piece.color} {target_piece.piece_type} at ({target_row, target_col}).")'''
+
+                self.selected_turret = None
+                self.valid_targets = []
+                self.firing_mode = False
+                self.remove_isolated_pieces(target_piece.color)
+                current_color = "white" if self.turn.lower() == "white" else "black"
+                self.actions[current_color] -= 1
+            else:
+                print("No piece at target location.")
+        else:
+            print("Invalid target")
 
     def get_connected_pieces(self, start_row, start_col):
         """Uses BFS to find all connected pieces to the king"""
@@ -195,47 +231,20 @@ class Game:
             king_position = self.board.find_king(color)
             connected_pieces = self.get_connected_pieces(*king_position)
             piececount = 0
+            removed_pieces = []
             for row in range(8):
                 for col in range(8):
                     piece = self.board.get_piece_at(row, col)
                     if piece and piece.color == color and (row, col) not in connected_pieces:
+                        removed_pieces.append((piece, (row, col)))
                         self.board.board[row][col] = None
-                        piececount+= 1
+                        piececount += 1
             if piececount > 0:
+                self.board.history.append(('isolated', removed_pieces))  # Save the isolated pieces for undo
                 if piececount == 1:
                     print('1 isolated piece lost :(')
                 elif piececount > 1:
-                    print(f"{piececount} isolated pieces lost!")            
-
-    def fire_turret(self, turret_row, turret_col, target_row, target_col):
-        """Fire!!!!!!!!!!"""
-        if self.validate_turret_target(target_row, target_col):
-            target_piece = self.board.get_piece_at(target_row, target_col)
-            if target_piece:
-                if target_piece.piece_type == PieceType.SHIELD:   #Converts shields into pawns
-                    self.board.board[target_row][target_col] = Piece(target_piece.color, PieceType.PAWN)
-                    print(f"Turret at ({turret_row}, {turret_col}) hit a shield at ({target_row}, {target_col}).")
-                elif target_piece.piece_type == PieceType.KING:   #If it hits the king, game over
-                    self.board.board[target_row][target_col] = None
-                    self.game_over = True
-                    self.winner = "Player 2" if target_piece.color == self.player1_color else "Player 1"
-                    self.scores[self.winner] += 1 
-                    print(f"Game over! {self.winner} wins!")
-
-                else: 
-                    self.board.board[target_row][target_col] = None   #removes the piece
-                    print(f"Turret at ({turret_row}, {turret_col}) fired and removed {target_piece.color} {target_piece.piece_type} at ({target_row}, {target_col}).")
-                
-                self.selected_turret = None
-                self.valid_targets = []
-                self.firing_mode = False
-                self.remove_isolated_pieces(target_piece.color)
-                current_color = "white" if self.turn.lower() == "white"  else "black"
-                self.actions[current_color] -= 1
-            else:
-                print("No piece at target location.")
-        else:
-            print("Invalid target")
+                    print(f"{piececount} isolated pieces lost!")
 
     def buy_action(self):
         """Allow the player to buy an action if they have at least 3 action points."""
@@ -266,7 +275,7 @@ class Game:
             return
         current_color = "white" if self.turn.lower() == "white" else "black"
         farm_count = self.board.count_farms(current_color)
-        self.action_points[current_color] += farm_count   #FARMING
+        self.action_points[current_color] += farm_count  # FARMING
 
         self.turn = "black" if current_color == "white" else "white"
         self.reset_actions()
