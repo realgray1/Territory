@@ -184,7 +184,6 @@ class Game:
 
                 if target_piece.piece_type == PieceType.SHIELD:  # Converts shields into pawns
                     self.board.board[target_row][target_col] = Piece(target_piece.color, PieceType.PAWN)
-                    print(f"Turret at ({turret_row, turret_col}) hit a shield at ({target_row, target_col}).")
                 elif target_piece.piece_type == PieceType.KING:  # If it hits the king, game over
                     self.board.board[target_row][target_col] = None
                     self.game_over = True
@@ -193,7 +192,6 @@ class Game:
                     print(f"Game over! {self.winner} wins!")
                 else:
                     self.board.board[target_row][target_col] = None  # Removes the piece
-                    print(f"Turret at ({turret_row, turret_col}) fired and removed {target_piece.color} {target_piece.piece_type} at ({target_row, target_col}).")
 
                 self.selected_turret = None
                 self.valid_targets = []
@@ -265,7 +263,7 @@ class Game:
         self.upgrade_type = None
         self.selected_turret = None
         self.valid_targets = []
-        print("Action cancelled.")
+        
 
     def pass_turn(self):
         self.end_turn()

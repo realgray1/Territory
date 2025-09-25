@@ -46,8 +46,7 @@ class QLearningAI:
         if not valid_moves:
             return None, exploration
         for move in valid_moves:
-            if move[0] == 'fire_turret':
-                return move, exploration
+            pass
 
         if np.random.uniform(0, 1) < self.epsilon:
             # Exploration: Choose a random action
@@ -133,7 +132,6 @@ class QLearningAI:
         elif action[0] == 'fire_turret':
             self.game.valid_targets = self.game.find_valid_targets_for_turret(action[1], action[2])
             self.game.fire_turret(action[1], action[2], action[3], action[4])
-            self.game.actions[color] -= 1
 
 
     def make_move(self):
@@ -257,20 +255,29 @@ class QLearningAI:
 
         color = self.get_current_color()
         valid_moves = self.find_valid_moves()
+        has_valid_turret_moves = False
+
         for move in valid_moves:
             if move[0] == 'fire_turret':
-                target_row, target_col = move[3], move[4]
+                has_valid_turret_moves = True
+                turret_row, turret_col, target_row, target_col = move[1], move[2], move[3], move[4]
                 target_piece = self.game.board.get_piece_at(target_row, target_col)
                 if target_piece and target_piece.piece_type == PieceType.KING:
-                    self.game.valid_targets = self.game.find_valid_targets_for_turret(move[1], move[2])
-                    self.game.fire_turret(move[1], move[2], target_row, target_col)
-                    self.cumulative_reward += 500  # Update cumulative reward for win
+                    self.game.valid_targets = self.game.find_valid_targets_for_turret(turret_row, turret_col)
+                    self.game.fire_turret(turret_row, turret_col, target_row, target_col)
+                    self.cumulative_reward += 500  
                     self.log_action(move, 'win', exploration=False)
-                    self.data_collector.log_game_end(self.episode)  # Log the end of the game
+                    self.data_collector.log_game_end(self.episode) 
                     self.game.game_over = True
                     self.game.winner = self.player_name
-                    return True  # End the game if the king is hit
-        return False
+                    return True 
+                else:
+                    self.game.valid_targets = self.game.find_valid_targets_for_turret(turret_row, turret_col) #NEED THIS
+                    self.game.fire_turret(turret_row, turret_col, target_row, target_col)
+                    valid_moves = self.find_valid_moves()
+                    return True
+        
+        return has_valid_turret_moves
 
     def decide_move(self):
         if self.game.game_over:
@@ -326,7 +333,7 @@ class QLearningAI:
                 piece = self.game.board.get_piece_at(row, col)
                 if piece and piece.piece_type == PieceType.PAWN and piece.color == color:
                     self.perform_action(('upgrade_pawn', row, col, PieceType.TURRET))
-                    print(f"Upgraded pawn to turret at ({row}, {col})")
+                    
                     return True
                 else:
                     pass

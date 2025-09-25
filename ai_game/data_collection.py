@@ -33,7 +33,6 @@ class DataCollector:
             'winner': winner,
             'loser': loser,
             'episode': episode,
-            'turn': turn,
             'q_value': q_value,
             'q_value_change': q_value_change,
             'exploration': exploration,
