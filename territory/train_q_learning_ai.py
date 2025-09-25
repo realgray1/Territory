@@ -41,13 +41,11 @@ def train_q_learning_ai(episodes=50, max_turns=100):
             current_state = ai_player1.get_state()
             ai_player1.make_move()
             if game.game_over:
-                print(f"Game over! Winner: {game.winner}")
                 game_over = True
                 break
 
             ai_player2.make_move()
             if game.game_over:
-                print(f"Game over! Winner: {game.winner}")
                 game_over = True
                 break
 

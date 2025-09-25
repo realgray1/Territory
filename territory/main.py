@@ -8,7 +8,7 @@ def main():
     print(f"Selected mode: {selected_mode}")
 
     if selected_mode == "side_by_side":
-        pygame.display.set_caption('Territory - Play Side by Side')
+        pygame.display.set_caption('Territory - Local Play')
         display.start_game_display()
     elif selected_mode == "play_vs_ai":
         pygame.display.set_caption('Territory - Play vs AI')
