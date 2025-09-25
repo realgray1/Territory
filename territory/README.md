@@ -1,19 +1,48 @@
-Welcome to my program of the game Territory. This was written with Python 3.13, older versions might not work.
-Don't change any folder or file names.
+# Territory – Q-Learning Board Game AI
 
-To install the necessary libraries, run the following command: pip install -r requirements.txt
+Territory is a Python-based board game that integrates a reinforcement learning agent trained with **Q-Learning**. The AI evaluates previous game states and selects optimal moves based on the highest Q-values stored in a Q-table.
 
-To run the game, open command prompt and locate the directory which you saved the "territory" folder on your computer. For example
-C:\Users\yourname\Downloads\territory>
-If command prompt opens in C:\Users\yourname>,, use 'cd downloads/territory' to get there.
+## Features
 
-Once in the correct directory, run 'python main.py' and the game should start. Keep the command prompt open for the print statements that help with playing the game
+* **Reinforcement Learning:** Implements Q-Learning to iteratively improve decision-making.
+* **Custom Training:** Run simulations to train the AI on game state/action pairs and update the Q-table.
+* **Scalable Simulations:** Configure the number of training episodes to balance performance and accuracy.
+* **Game Logging:** Game data is recorded after each run to support further analysis and model refinement.
 
-The AI uses Q-learning, a machine learning technique that evaluates previous game states to determine the best moves. The AI stores these evaluations in a Q-table and selects moves based on the highest Q-value.
+## Installation
 
-To get the q table I ran simulations and stored the game data from those. To train the AI yourself try 'python train_q_learning_ai.py'
-By default it will run 50 games, but you can change this by opening the .py file and finding
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/yourusername/territory.git
+cd territory
+pip install -r requirements.txt
+```
+
+## Usage
+
+To play the game:
+
+```bash
+python main.py
+```
+
+To train the AI agent:
+
+```bash
+python train_q_learning_ai.py
+```
+
+By default, the agent runs 50 training games. You can adjust this by editing:
+
+```python
 if __name__ == "__main__":
-    train_q_learning_ai(episodes=50)   <-- change this number 
+    train_q_learning_ai(episodes=50)  # change 50 to desired number
+```
 
-After each game finishes, the game data is logged and the q table is updated. As the Q-table grows with more simulations, performance may degrade. If you run too many simulations, the game could slow down or even crash. It’s recommended to limit the number of simulations when training the AI.
+## Notes
+
+* Performance may degrade with very high numbers of simulations; it is recommended to balance accuracy with runtime.
+* Works with Python 3.13 (earlier versions may not be supported).
+
+---
