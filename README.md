@@ -14,7 +14,7 @@ Territory is a Python-based board game that integrates a reinforcement learning 
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/yourusername/territory.git
+git clone https://github.com/realgray1/territory.git
 cd territory
 pip install -r requirements.txt
 ```
