@@ -16,7 +16,6 @@ Clone the repository and install dependencies:
 ```bash
 git clone https://github.com/realgray1/territory.git
 cd territory
-cd territory
 pip install -r requirements.txt
 ```
 
